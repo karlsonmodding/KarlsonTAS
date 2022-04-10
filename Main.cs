@@ -45,10 +45,6 @@ class Main : MelonMod
 		if (buildIndex > 1)
 		{
 			MelonCoroutines.Start(InitDebug());
-			if (bulletPrefab == null)
-            {
-				bulletPrefab = Object.FindObjectOfType<RangedWeapon>().projectile;
-            }
 			SetObjArray();
 		}
 		if (buildIndex == 1)
@@ -92,7 +88,7 @@ class Main : MelonMod
 		temp = GameObject.FindObjectsOfType(typeof(Transform)) as Transform[];
 		foreach (Transform t in temp)
 		{
-			if (t.gameObject.scene.buildIndex >= 0) GameObject.Destroy(t.gameObject);
+			if (t.gameObject.scene.name != "DontDestroyOnLoad") GameObject.Destroy(t.gameObject);
 		}
 #pragma warning disable CS0618
 		Application.LoadLevelAdditive(Application.loadedLevel);
@@ -171,22 +167,6 @@ class Main : MelonMod
 			ini.SetFloat(section, "RotationX", washingMachine.eulerAngles.x);
 			ini.SetFloat(section, "RotationYZ", washingMachine.eulerAngles.y);
 		}
-		allBullets = Object.FindObjectsOfType<Bullet>();
-		ini.SetInt("Player", "BulletCount", allBullets.Length);
-		for (int i = 0; i < allBullets.Length; i++)
-        {
-			section = "bullet_" + i;
-			ini.SetFloat(section, "PositionX", allBullets[i].gameObject.transform.position.x);
-			ini.SetFloat(section, "PositionY", allBullets[i].gameObject.transform.position.y);
-			ini.SetFloat(section, "PositionZ", allBullets[i].gameObject.transform.position.z);
-			ini.SetFloat(section, "RotationX", allBullets[i].gameObject.transform.eulerAngles.x);
-			ini.SetFloat(section, "RotationY", allBullets[i].gameObject.transform.eulerAngles.y);
-			ini.SetFloat(section, "RotationZ", allBullets[i].gameObject.transform.eulerAngles.z);
-			Rigidbody rb = allBullets[i].gameObject.GetComponentInChildren<Rigidbody>();
-			ini.SetFloat(section, "VelocityX", rb.velocity.x);
-			ini.SetFloat(section, "VelocityY", rb.velocity.y);
-			ini.SetFloat(section, "VelocityZ", rb.velocity.z);
-		}
 	}
 
 	public static IEnumerator GetSaveState(string name = "savestate") {
@@ -221,7 +201,7 @@ class Main : MelonMod
 		plr.gameObject.GetComponent<Rigidbody>().velocity = new Vector3(ini.GetFloat(section, "VelocityX"), ini.GetFloat(section, "VelocityY"), ini.GetFloat(section, "VelocityZ"));
 		X = ini.GetInt(section, "WeaponId");
 		if (X >= 0) Object.FindObjectOfType<DetectWeapons>().ForcePickup(allMovables[(int)X]);
-		if (ini.GetString(section, "Level").Equals("10Sky2"))
+		if (ini.GetString(section, "Level").Equals("10Sky2")) // washing machine
 		{
 			Object.FindObjectOfType<RotateObject>().gameObject.transform.eulerAngles = new Vector3(
 				ini.GetFloat("Sky2", "RotationX"),
@@ -263,21 +243,6 @@ class Main : MelonMod
 				allEnemies[i].transform.eulerAngles.x, 
 				ini.GetFloat(section, "Rotation"), 
 				allEnemies[i].transform.eulerAngles.z);
-		}
-		for (int i = 0; i < ini.GetInt("Player", "BulletCount"); i++)
-        {
-			section = "bullet_" + i;
-			X = ini.GetFloat(section, "PositionX");
-			Y = ini.GetFloat(section, "PositionY");
-			Z = ini.GetFloat(section, "PositionZ");
-			float RX = ini.GetFloat(section, "RotationX");
-			float RY = ini.GetFloat(section, "RotationY");
-			float RZ = ini.GetFloat(section, "RotationZ");
-			GameObject b = Object.Instantiate(bulletPrefab, new Vector3(X, Y, Z), Quaternion.identity);
-			X = ini.GetFloat(section, "VelocityX");
-			Y = ini.GetFloat(section, "VelocityY");
-			Z = ini.GetFloat(section, "VelocityX");
-			b.GetComponentInChildren<Rigidbody>().velocity = new Vector3(X, Y, Z);
 		}
 	}
 
