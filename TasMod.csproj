@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="DebugPatch.cs" />
+    <Compile Include="LobbyPatch.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="OptionsPatch.cs" />
     <Compile Include="PlayerMovementPatch.cs" />
@@ -45,6 +46,9 @@
     <Reference Include="MelonLoader, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\MelonLoader.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>lib\System.dll</HintPath>
     </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">

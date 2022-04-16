@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 using System.IO;
 using System.Collections;
@@ -15,17 +16,15 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.0", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.1-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	const float version = 1f;
+	public const float version = 1.1f;
 	static MelonPreferences_Category category;
 	static string savHotkey, loadHotkey;
 	static MelonPreferences_Entry savPref, loadPref;
-	static GameObject bulletPrefab;
-	static Bullet[] allBullets;
 	static GameObject[] allMovables;
 	static Enemy[] allEnemies;
 	public override void OnApplicationStart() {
@@ -62,6 +61,7 @@ class Main : MelonMod
 			}
 		}
 		Time.timeScale = gameSpeed / 100f;
+		MelonCoroutines.Start(AudioPatch());
 	}
 
 
@@ -69,7 +69,6 @@ class Main : MelonMod
 		base.OnUpdate();
 		if (Input.GetKeyDown(savHotkey) & Time.timeScale != 0f) SetSaveState();
 		else if (Input.GetKeyDown(loadHotkey) & Time.timeScale != 0f) MelonCoroutines.Start(GetSaveState());
-		//InputPatch();
 	}
 
 	static void SetObjArray() {
@@ -83,28 +82,42 @@ class Main : MelonMod
 		allEnemies = Object.FindObjectsOfType<Enemy>();
 	}
 
+	IEnumerator AudioPatch() {
+		foreach (GameObject g in Resources.FindObjectsOfTypeAll(typeof(GameObject)))
+        {
+			Options o = g.GetComponent<Options>();
+			if (o != null)
+            {
+				g.SetActive(true);
+				o.enabled = true;
+				yield return null;
+				g.SetActive(false);
+				break;
+			}
+        }
+    }
+
 	private static Transform[] temp;
 	public static void Reload() { // weirdass shenanigan that fixes the glitch where keys are not registered in scene transition for savestates
 		temp = GameObject.FindObjectsOfType(typeof(Transform)) as Transform[];
 		foreach (Transform t in temp)
 		{
-			if (t.gameObject.scene.name != "DontDestroyOnLoad") GameObject.Destroy(t.gameObject);
+			if (t.gameObject.scene.buildIndex != SceneManager.GetActiveScene().buildIndex) GameObject.Destroy(t.gameObject);
 		}
-#pragma warning disable CS0618
-		Application.LoadLevelAdditive(Application.loadedLevel);
+		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Additive);
 	}
 
 	IEnumerator InitDebug() {
 		yield return null;
 		Debug d = Object.FindObjectOfType<Debug>();
-		typeof(Debug).GetField("fpsOn").SetValue(d, true);
-		typeof(Debug).GetField("speedOn").SetValue(d, true);
+		typeof(Debug).GetField("speedOn", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(d, true);
+		typeof(Debug).GetField("fpsOn", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(d, true);
 		GameState.Instance.SetSlowmo(false);
 	}
 
-	static string VersionToString(float version) {
-		string foo = (version % 10).ToString();
-		string bar = (Mathf.Floor(version) / 10).ToString();
+	public static string VersionToString(float version) {
+		string foo = (version % 10).ToString("f1");
+		string bar = Mathf.Floor(version / 10f).ToString();
 		return bar + "." + foo;
 	}
 
@@ -180,10 +193,10 @@ class Main : MelonMod
 		}
 		else if (ini.GetFloat(section, "Version") != version)
 		{
-			MelonLogger.Warning("This savestate is for another version of Karlson TAS!");
+			MelonLogger.Warning("This savestate is for version " + VersionToString(ini.GetFloat(section, "Version")) + " of Karlson TAS!\nYou're running version " + VersionToString(version));
 			yield break;
 		}
-		Reload();
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		yield return null;
 		SetObjArray();
 		PlayerMovement plr = Object.FindObjectOfType<PlayerMovement>();

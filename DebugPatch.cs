@@ -13,7 +13,7 @@ namespace TasMod
     class FpsPatch
     {
         static void Postfix(Debug __instance) {
-            string s = "\nGame Speed: " + Main.gameSpeed + "%";
+            string s = "\nGame Speed: " + Main.gameSpeed + "%\nTAS Mod " + Main.VersionToString(Main.version);
             __instance.fps.text += s;
         }
 
