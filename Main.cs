@@ -16,17 +16,18 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.1-alpha", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.2-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	public const float version = 1.1f;
+	public const float version = 1.2f;
 	static MelonPreferences_Category category;
 	static string savHotkey, loadHotkey;
 	static MelonPreferences_Entry savPref, loadPref;
 	static GameObject[] allMovables;
 	static Enemy[] allEnemies;
+	static GameObject[] allGuns;
 	public override void OnApplicationStart() {
 		base.OnApplicationStart();
 		Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\savestates");
@@ -74,11 +75,18 @@ class Main : MelonMod
 	static void SetObjArray() {
 		allMovables = new GameObject[Object.FindObjectsOfType<Rigidbody>().Length];
 		int counter = 0;
+		int gunCount = 0;
 		foreach (Rigidbody r in Object.FindObjectsOfType<Rigidbody>())
 		{
+			if (r.gameObject.CompareTag("Gun"))
+            {
+				continue;
+            }
+			if (r.transform.parent != null) continue;
 			allMovables[counter] = r.gameObject;
 			counter++;
 		}
+		allGuns = GameObject.FindGameObjectsWithTag("Gun");
 		allEnemies = Object.FindObjectsOfType<Enemy>();
 	}
 
@@ -102,7 +110,7 @@ class Main : MelonMod
 		temp = GameObject.FindObjectsOfType(typeof(Transform)) as Transform[];
 		foreach (Transform t in temp)
 		{
-			if (t.gameObject.scene.buildIndex != SceneManager.GetActiveScene().buildIndex) GameObject.Destroy(t.gameObject);
+			if (t.gameObject.scene.buildIndex == SceneManager.GetActiveScene().buildIndex) GameObject.Destroy(t.gameObject);
 		}
 		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Additive);
 	}
@@ -144,6 +152,12 @@ class Main : MelonMod
 		ini.SetFloat(section, "InternalCameraX", (float)internalX.GetValue(plr));
 		FieldInfo gun = typeof(DetectWeapons).GetField("gun", BindingFlags.NonPublic | BindingFlags.Instance);
 		int gunIndex = -1;
+		DetectWeapons DW = Object.FindObjectOfType<DetectWeapons>();
+		for (int i = 0; i < allGuns.Length; i++)
+        {
+			if (allGuns[i] == (GameObject)gun.GetValue(DW)) gunIndex = i;
+        }
+		ini.SetInt("Player", "WeaponId", gunIndex);
 		for (int i = 0; i < allMovables.Length; i++)
 		{
 			if (allMovables[i] == plr.gameObject) continue;
@@ -163,7 +177,6 @@ class Main : MelonMod
 			ini.SetFloat(section, "VelocityY", rb.velocity.y);
 			ini.SetFloat(section, "VelocityZ", rb.velocity.z);
 		}
-		ini.SetInt("Player", "WeaponId", gunIndex);
 		for (int i = 0; i < allEnemies.Length; i++) //TODO: complete enemy saving
 		{
 			if (allEnemies[i].gameObject == null) continue;
@@ -213,7 +226,13 @@ class Main : MelonMod
 		internalX.SetValue(plr, ini.GetFloat(section, "InternalCameraX")); 
 		plr.gameObject.GetComponent<Rigidbody>().velocity = new Vector3(ini.GetFloat(section, "VelocityX"), ini.GetFloat(section, "VelocityY"), ini.GetFloat(section, "VelocityZ"));
 		X = ini.GetInt(section, "WeaponId");
-		if (X >= 0) Object.FindObjectOfType<DetectWeapons>().ForcePickup(allMovables[(int)X]);
+		if (X >= 0)
+        {
+			DetectWeapons dw = Object.FindObjectOfType<DetectWeapons>();
+			dw.ForcePickup(allGuns[(int)X]);
+			GameObject gun = allGuns[(int)X];
+			//gun.transform.SetParent(null);
+		}
 		if (ini.GetString(section, "Level").Equals("10Sky2")) // washing machine
 		{
 			Object.FindObjectOfType<RotateObject>().gameObject.transform.eulerAngles = new Vector3(
