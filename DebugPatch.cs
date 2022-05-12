@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Diagnostics;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +16,7 @@ namespace TasMod
     class FpsPatch
     {
         static void Postfix(Debug __instance) {
-            string s = "\nGame Speed: " + Main.gameSpeed + "%\nTAS Mod " + Main.VersionToString(Main.version);
+            string s = "\nGame Speed: " + Main.gameSpeed + "%\nPos" + Main.player.position.ToString() + "\nSavestate slot " + Main.stateSlot + "\nTAS Mod " + Main.VersionToString(Main.version);
             __instance.fps.text += s;
         }
 
@@ -38,6 +41,19 @@ namespace TasMod
             else if (__instance.console.text.Contains("loadstate"))
             {
                 MelonCoroutines.Start(Main.GetSaveState());
+            }
+            else if (__instance.console.text == "statefile")
+            {
+                Process.Start(Directory.GetCurrentDirectory() + "\\savestates\\savestate.ini");
+            }
+            else if (__instance.console.text.Contains("slot "))
+            {
+                string s = __instance.console.text.Substring(__instance.console.text.IndexOf(' ') + 1);
+                byte i = 0;
+                if (byte.TryParse(s, out i))
+                {
+                    Main.stateSlot = i;
+                }
             }
 
             // easter eggs shhhhhh youre now contractually obligated not to tell anyone about this
@@ -71,6 +87,14 @@ namespace TasMod
     {
         static void Postfix() {
             Time.timeScale = Main.gameSpeed / 100f;
+        }
+    }
+    [HarmonyPatch(typeof(Debug), "Help")]
+    class HelpPatch 
+    {
+        static void Postfix(Debug __instance) {
+            __instance.consoleLog.text += $"\nTasMod {Main.VersionToString(Main.version)} alpha\n   savestate - Saves the game state\n   loadstate - Loads the game state" +
+                $"\n   slot i - Changes the savestate slot to i\n\nMade by Mang432";
         }
     }
 }

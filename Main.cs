@@ -16,12 +16,14 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.2-alpha", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.3-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	public const float version = 1.2f;
+	public const float version = 1.3f;
+	public static Transform player;
+	public static byte stateSlot = 0;
 	static MelonPreferences_Category category;
 	static string savHotkey, loadHotkey;
 	static MelonPreferences_Entry savPref, loadPref;
@@ -46,6 +48,7 @@ class Main : MelonMod
 		{
 			MelonCoroutines.Start(InitDebug());
 			SetObjArray();
+			player = Object.FindObjectOfType<PlayerMovement>().transform;
 		}
 		if (buildIndex == 1)
 		{
@@ -75,7 +78,6 @@ class Main : MelonMod
 	static void SetObjArray() {
 		allMovables = new GameObject[Object.FindObjectsOfType<Rigidbody>().Length];
 		int counter = 0;
-		int gunCount = 0;
 		foreach (Rigidbody r in Object.FindObjectsOfType<Rigidbody>())
 		{
 			if (r.gameObject.CompareTag("Gun"))
@@ -130,7 +132,7 @@ class Main : MelonMod
 	}
 
 	public static void SetSaveState() {
-		IniFile ini = new IniFile(Directory.GetCurrentDirectory() + "\\savestates\\savestate.ini");
+		IniFile ini = new IniFile(Directory.GetCurrentDirectory() + $"\\savestates\\savestate{stateSlot}.ini");
 		PlayerMovement plr = Object.FindObjectOfType<PlayerMovement>();
 		Vector3 position = plr.gameObject.transform.position;
 		Vector3 vel = plr.gameObject.GetComponent<Rigidbody>().velocity;
@@ -193,11 +195,12 @@ class Main : MelonMod
 			ini.SetFloat(section, "RotationX", washingMachine.eulerAngles.x);
 			ini.SetFloat(section, "RotationYZ", washingMachine.eulerAngles.y);
 		}
+		MelonDebug.Msg("State saved");
 	}
 
-	public static IEnumerator GetSaveState(string name = "savestate") {
+	public static IEnumerator GetSaveState() {
 		//Time.timeScale = 0f;
-		IniFile ini = new IniFile(Directory.GetCurrentDirectory() + "\\savestates\\" + name + ".ini");
+		IniFile ini = new IniFile(Directory.GetCurrentDirectory() + "\\savestates\\savestate" + stateSlot + ".ini");
 		string section = "player";
 		if (ini.GetString(section, "Level") != SceneManager.GetActiveScene().name)
 		{
@@ -276,6 +279,7 @@ class Main : MelonMod
 				ini.GetFloat(section, "Rotation"), 
 				allEnemies[i].transform.eulerAngles.z);
 		}
+		MelonDebug.Msg("State loaded");
 	}
 
 }

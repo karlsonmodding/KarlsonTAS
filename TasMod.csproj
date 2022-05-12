@@ -37,6 +37,7 @@
     <Compile Include="OptionsPatch.cs" />
     <Compile Include="PlayerMovementPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SaveManagerPatch.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
