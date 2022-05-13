@@ -44,7 +44,7 @@ namespace TasMod
             }
             else if (__instance.console.text == "statefile")
             {
-                Process.Start(Directory.GetCurrentDirectory() + "\\savestates\\savestate.ini");
+                Process.Start(Directory.GetCurrentDirectory() + $"\\savestates\\savestate{Main.stateSlot}.ini");
             }
             else if (__instance.console.text.Contains("slot "))
             {

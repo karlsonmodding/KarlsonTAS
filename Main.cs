@@ -16,30 +16,24 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.3-alpha", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.2.0-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	public const float version = 1.3f;
+	public const float version = 2f;
 	public static Transform player;
 	public static byte stateSlot = 0;
-	static MelonPreferences_Category category;
 	static string savHotkey, loadHotkey;
-	static MelonPreferences_Entry savPref, loadPref;
 	static GameObject[] allMovables;
 	static Enemy[] allEnemies;
 	static GameObject[] allGuns;
+	static bool bypassSetObjArray;
 	public override void OnApplicationStart() {
 		base.OnApplicationStart();
 		Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\savestates");
-		//MelonLogger.Msg(VersionToString(version));
-		category = MelonPreferences.CreateCategory("TasMod");
-		savPref = category.CreateEntry<char>("SavestateHotkey", 'r');
-		loadPref = category.CreateEntry<char>("LoadstateHotkey", 't');
-		savHotkey = savPref.GetValueAsString();
-		loadHotkey = loadPref.GetValueAsString();
-		//MelonPreferences.Save(); //crashes the mod, for unknown reasons to me
+		savHotkey = "r";
+		loadHotkey = "t";
 	}
 
 	public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
@@ -47,8 +41,9 @@ class Main : MelonMod
 		if (buildIndex > 1)
 		{
 			MelonCoroutines.Start(InitDebug());
-			SetObjArray();
-			player = Object.FindObjectOfType<PlayerMovement>().transform;
+            if (bypassSetObjArray) bypassSetObjArray = false;
+            else SetObjArray();
+            player = Object.FindObjectOfType<PlayerMovement>().transform;
 		}
 		if (buildIndex == 1)
 		{
@@ -84,12 +79,17 @@ class Main : MelonMod
             {
 				continue;
             }
-			if (r.transform.parent != null) continue;
 			allMovables[counter] = r.gameObject;
 			counter++;
 		}
+		//MelonLogger.Msg(counter);
 		allGuns = GameObject.FindGameObjectsWithTag("Gun");
 		allEnemies = Object.FindObjectsOfType<Enemy>();
+		foreach (GameObject g in allGuns)
+        {
+			MelonLogger.Msg(g);
+        }
+		MelonLogger.Msg("\n");
 	}
 
 	IEnumerator AudioPatch() {
@@ -114,6 +114,7 @@ class Main : MelonMod
 		{
 			if (t.gameObject.scene.buildIndex == SceneManager.GetActiveScene().buildIndex) GameObject.Destroy(t.gameObject);
 		}
+		bypassSetObjArray = true;
 		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex, LoadSceneMode.Additive);
 	}
 
@@ -215,6 +216,7 @@ class Main : MelonMod
 		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		yield return null;
 		SetObjArray();
+		yield return null;
 		PlayerMovement plr = Object.FindObjectOfType<PlayerMovement>();
 		Transform transform = plr.gameObject.transform;
 		float X = ini.GetFloat(section, "PlayerX");
