@@ -16,15 +16,16 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.2.0-alpha", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.7-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	public const float version = 2f;
+	public const float version = 1.7f;
 	public static Transform player;
 	public static byte stateSlot = 0;
 	static string savHotkey, loadHotkey;
+	public static string backup;
 	static GameObject[] allMovables;
 	static Enemy[] allEnemies;
 	static GameObject[] allGuns;
@@ -44,6 +45,7 @@ class Main : MelonMod
             if (bypassSetObjArray) bypassSetObjArray = false;
             else SetObjArray();
             player = Object.FindObjectOfType<PlayerMovement>().transform;
+			Object.Destroy(SlowmoEffect.Instance);
 		}
 		if (buildIndex == 1)
 		{
@@ -85,11 +87,6 @@ class Main : MelonMod
 		//MelonLogger.Msg(counter);
 		allGuns = GameObject.FindGameObjectsWithTag("Gun");
 		allEnemies = Object.FindObjectsOfType<Enemy>();
-		foreach (GameObject g in allGuns)
-        {
-			MelonLogger.Msg(g);
-        }
-		MelonLogger.Msg("\n");
 	}
 
 	IEnumerator AudioPatch() {
@@ -132,7 +129,10 @@ class Main : MelonMod
 		return bar + "." + foo;
 	}
 
+
+
 	public static void SetSaveState() {
+		backup = File.ReadAllText(Directory.GetCurrentDirectory() + "\\savestates\\savestate" + stateSlot + ".ini");
 		IniFile ini = new IniFile(Directory.GetCurrentDirectory() + $"\\savestates\\savestate{stateSlot}.ini");
 		PlayerMovement plr = Object.FindObjectOfType<PlayerMovement>();
 		Vector3 position = plr.gameObject.transform.position;
@@ -160,6 +160,7 @@ class Main : MelonMod
         {
 			if (allGuns[i] == (GameObject)gun.GetValue(DW)) gunIndex = i;
         }
+		if (SceneManager.GetActiveScene().name == "10Sky2" || SceneManager.GetActiveScene().name == "8Sky0") gunIndex = -1;
 		ini.SetInt("Player", "WeaponId", gunIndex);
 		for (int i = 0; i < allMovables.Length; i++)
 		{
@@ -188,6 +189,7 @@ class Main : MelonMod
 			ini.SetFloat(section, "PositionY", allEnemies[i].gameObject.transform.position.y);
 			ini.SetFloat(section, "PositionZ", allEnemies[i].gameObject.transform.position.z);
 			ini.SetFloat(section, "Rotation", allEnemies[i].gameObject.transform.eulerAngles.y);
+			ini.SetBool(section, "isDead", allEnemies[i].IsDead());
 		}
 		if (SceneManager.GetActiveScene().buildIndex == 12)
 		{
@@ -280,6 +282,11 @@ class Main : MelonMod
 				allEnemies[i].transform.eulerAngles.x, 
 				ini.GetFloat(section, "Rotation"), 
 				allEnemies[i].transform.eulerAngles.z);
+			if (ini.GetBool(section, "isDead"))
+            {
+				allEnemies[i].GetComponent<RagdollController>().MakeRagdoll(Vector3.zero);
+				allEnemies[i].DropGun(Vector3.zero);
+			}
 		}
 		MelonDebug.Msg("State loaded");
 	}

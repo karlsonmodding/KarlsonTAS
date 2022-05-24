@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using MelonLoader;
 using UnityEngine;
 using Harmony;
+using UnityEngine.SceneManagement;
 
 namespace TasMod
 {
@@ -55,7 +56,21 @@ namespace TasMod
                     Main.stateSlot = i;
                 }
             }
-
+            else if (__instance.console.text == "loadbackup")
+            {
+                File.WriteAllText(Directory.GetCurrentDirectory() + $"\\savestates\\savestate{Main.stateSlot}.ini", Main.backup);
+                MelonCoroutines.Start(Main.GetSaveState());
+            }
+            else if (__instance.console.text == "menu")
+            {
+                SceneManager.LoadScene(1);
+                UIManger ui = Object.FindObjectOfType<UIManger>();
+                Object.Destroy(ui.gameUI);
+                Object.Destroy(ui.deadUI);
+                Object.Destroy(ui.winUI);
+                Object.Destroy(ui.gameObject);
+                Object.Destroy(__instance.gameObject.transform);
+            }
             // easter eggs shhhhhh youre now contractually obligated not to tell anyone about this
 
             else if (__instance.console.text.ToLower() == "patman") Application.Quit();
@@ -94,7 +109,8 @@ namespace TasMod
     {
         static void Postfix(Debug __instance) {
             __instance.consoleLog.text += $"\nTasMod {Main.VersionToString(Main.version)} alpha\n   savestate - Saves the game state\n   loadstate - Loads the game state" +
-                $"\n   slot i - Changes the savestate slot to i\n\nMade by Mang432";
+                $"\n   slot i - Changes the savestate slot to in\n   setspeed i - Changes the game speed to i%\n   statefile - Opens the savestate file\n" +
+                $"   loadbackup - loads the previous savestate\n\nMade by Mang432";
         }
     }
 }
