@@ -30,6 +30,7 @@ class Main : MelonMod
 	static Enemy[] allEnemies;
 	static GameObject[] allGuns;
 	static bool bypassSetObjArray;
+	public static bool displayInput=false;
 	public override void OnApplicationStart() {
 		base.OnApplicationStart();
 		Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\savestates");
