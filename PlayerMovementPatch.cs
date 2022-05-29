@@ -24,13 +24,15 @@ namespace TasMod
             return false;
         }
     }
-    [HarmonyPatch(typeof(PlayerMovement), "Look")]
-    class LookSkip
+
+    [HarmonyPatch(typeof(PlayerMovement), "Update")]
+    class UpdatePrefix
     {
-        static void Prefix(PlayerMovement __instance) {
-            
-            
+        static void Prefix(PlayerMovement __instance)
+        {
+            Main.velocity = __instance.GetVelocity();
         }
+
     }
 
 }
