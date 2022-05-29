@@ -31,6 +31,7 @@ class Main : MelonMod
 	static GameObject[] allGuns;
 	static bool bypassSetObjArray;
 	public static bool displayInput=false;
+	public static Vector3 velocity;
 	public override void OnApplicationStart() {
 		base.OnApplicationStart();
 		Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\savestates");
@@ -71,6 +72,23 @@ class Main : MelonMod
 		base.OnUpdate();
 		if (Input.GetKeyDown(savHotkey) & Time.timeScale != 0f) SetSaveState();
 		else if (Input.GetKeyDown(loadHotkey) & Time.timeScale != 0f) MelonCoroutines.Start(GetSaveState());
+
+        if (Input.mouseScrollDelta.y > 0){
+			Main.gameSpeed+=1;
+			if (Main.gameSpeed > 254) Main.gameSpeed = 254;
+			if(Time.timeScale != 0f)
+            {
+				Time.timeScale = Main.gameSpeed / 100f;
+			}
+		}
+		else if(Input.mouseScrollDelta.y < 0){
+			Main.gameSpeed -= 1;
+			if (Main.gameSpeed < 1) Main.gameSpeed = 1;
+			if (Time.timeScale != 0f)
+			{
+				Time.timeScale = Main.gameSpeed / 100f;
+			}
+		}
 	}
 
 	static void SetObjArray() {

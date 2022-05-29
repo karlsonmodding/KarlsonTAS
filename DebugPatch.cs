@@ -16,40 +16,30 @@ namespace TasMod
     [HarmonyPatch(typeof(Debug), "Fps")]
     class FpsPatch
     {
+        static String[] btns = {"Fire1", "Crouch", "Jump", "Pickup", "Drop"};
         static void Postfix(Debug __instance) {
             string s = "\nGame Speed: " + Main.gameSpeed + "%\nPos" + Main.player.position.ToString() + "\nSavestate slot " + Main.stateSlot + "\nTAS Mod " + Main.VersionToString(Main.version);
-            if (Main.displayInput){ // code is not pretty or good but idc
+            if (Main.displayInput){ 
                 s += "\nKeyInput: ";
                 if((Input.GetAxis("Horizontal") > 0)){
-                    s += "RIGHT ";
+                    s += "Right ";
                 }else if ((Input.GetAxis("Horizontal") < 0)){
-                    s += "LEFT ";
+                    s += "Left ";
                 }
                 if ((Input.GetAxis("Vertical") > 0)){
-                    s += "UP ";
+                    s += "Up ";
                 }
                 else if ((Input.GetAxis("Vertical") < 0)){
-                    s += "DOWN ";
+                    s += "Down ";
                 }
-                if(Input.GetButton("Fire1")){
-                    s += "FIRE ";
-                }
-                if (Input.GetButton("Crouch")){
-                    s += "CROUCH ";
-                }
-                if (Input.GetButton("Jump")){
-                    s += "JUMP ";
-                }
-                if (Input.GetButton("Pickup"))
-                {
-                    s += "PICKUP ";
-                }
-                if (Input.GetButton("Drop"))
-                {
-                    s += "DROP ";
+                foreach(String btn in btns){
+                    if (Input.GetButton(btn)){
+                        s += btn+" ";
+                    }
                 }
 
             }
+            s += "\nVelocity"+Main.velocity.ToString();
             __instance.fps.text += s;
         }
 
@@ -148,7 +138,7 @@ namespace TasMod
         static void Postfix(Debug __instance) {
             __instance.consoleLog.text += $"\nTasMod {Main.VersionToString(Main.version)} alpha\n   savestate - Saves the game state\n   loadstate - Loads the game state" +
                 $"\n   slot i - Changes the savestate slot to in\n   setspeed i - Changes the game speed to i%\n   statefile - Opens the savestate file\n" +
-                $"   loadbackup - loads the previous savestate\n   showinput [true/false] - shows key input or hides it \n \nMade by Mang432";
+                $"   loadbackup - loads the previous savestate\n   showinput 1 - shows key input or hides it \n \nMade by Mang432";
         }
     }
 }
