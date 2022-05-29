@@ -16,12 +16,12 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.7-alpha", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.8-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	public const float version = 1.7f;
+	public const float version = 1.8f;
 	public static Transform player;
 	public static byte stateSlot = 0;
 	static string savHotkey, loadHotkey;
@@ -130,7 +130,27 @@ class Main : MelonMod
 		return bar + "." + foo;
 	}
 
+	static int PatchToInt(float ver) {
+		while (ver % 1 > Mathf.Floor(ver % 1))
+		{
+			ver *= 10;
+		}
+		return (int)ver;
+	}
 
+	static bool VersionCheck(float ver) {
+		if (version >= 10f) //SemVer compliance
+		{
+#pragma warning disable CS0162
+			return (Mathf.RoundToInt(ver) != Mathf.RoundToInt(version));
+#pragma warning restore CS0162
+		}
+		else
+		{
+			if (Mathf.RoundToInt(ver) == Mathf.RoundToInt(version) & (PatchToInt(ver) == PatchToInt(version) | PatchToInt(ver) == PatchToInt(version) - 1)) return false;
+			else return true;
+		}
+	}
 
 	public static void SetSaveState() {
 		backup = File.ReadAllText(Directory.GetCurrentDirectory() + "\\savestates\\savestate" + stateSlot + ".ini");
@@ -211,7 +231,7 @@ class Main : MelonMod
 			MelonLogger.Warning("This savestate is not for this level!");
 			yield break;
 		}
-		else if (ini.GetFloat(section, "Version") != version)
+		else if (VersionCheck(ini.GetFloat(section, "Version")))
 		{
 			MelonLogger.Warning("This savestate is for version " + VersionToString(ini.GetFloat(section, "Version")) + " of Karlson TAS!\nYou're running version " + VersionToString(version));
 			yield break;
