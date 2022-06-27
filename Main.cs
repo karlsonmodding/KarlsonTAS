@@ -16,27 +16,24 @@ using Unity;
 using Harmony;
 using TMPro;
 
-[assembly: MelonInfo(typeof(Main),"TasMod" , "0.1.8-alpha", "Mang432")]
+[assembly: MelonInfo(typeof(Main),"TasMod" , "0.2.0-alpha", "Mang432")]
 [assembly: MelonGame("Dani", "Karlson")]
 class Main : MelonMod
 {
 	public static byte gameSpeed = 100;
-	public const float version = 1.8f;
+	public const float version = 2.0f;
 	public static Transform player;
 	public static byte stateSlot = 0;
-	static string savHotkey, loadHotkey;
 	public static string backup;
 	static GameObject[] allMovables;
 	static Enemy[] allEnemies;
 	static GameObject[] allGuns;
 	static bool bypassSetObjArray;
 	public static bool displayInput=false;
-	public static Vector3 velocity;
+	public static Vector3 velocity, cameraRotation;
 	public override void OnApplicationStart() {
 		base.OnApplicationStart();
 		Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\savestates");
-		savHotkey = "r";
-		loadHotkey = "t";
 	}
 
 	public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
@@ -44,13 +41,14 @@ class Main : MelonMod
 		if (buildIndex > 1)
 		{
 			MelonCoroutines.Start(InitDebug());
-            if (bypassSetObjArray) bypassSetObjArray = false;
-            else SetObjArray();
-            player = Object.FindObjectOfType<PlayerMovement>().transform;
+			if (bypassSetObjArray) bypassSetObjArray = false;
+			else SetObjArray();
+			player = Object.FindObjectOfType<PlayerMovement>().transform;
 			Object.Destroy(SlowmoEffect.Instance);
 		}
 		if (buildIndex == 1)
 		{
+			QualitySettings.vSyncCount = 1;
 			Options o = Object.FindObjectOfType<Options>();
 			if (o != null) o.enabled = true;
 			if (Object.FindObjectsOfType<TextMeshProUGUI>().Length == 0) return;
@@ -70,14 +68,14 @@ class Main : MelonMod
 
 	public override void OnUpdate() {
 		base.OnUpdate();
-		if (Input.GetKeyDown(savHotkey) & Time.timeScale != 0f) SetSaveState();
-		else if (Input.GetKeyDown(loadHotkey) & Time.timeScale != 0f) MelonCoroutines.Start(GetSaveState());
+		//if (Input.GetKeyDown(savHotkey) & Time.timeScale != 0f) SetSaveState();
+		//else if (Input.GetKeyDown(loadHotkey) & Time.timeScale != 0f) MelonCoroutines.Start(GetSaveState());
 
-        if (Input.mouseScrollDelta.y > 0){
+		if (Input.mouseScrollDelta.y > 0){
 			Main.gameSpeed+=1;
 			if (Main.gameSpeed > 254) Main.gameSpeed = 254;
 			if(Time.timeScale != 0f)
-            {
+			{
 				Time.timeScale = Main.gameSpeed / 100f;
 			}
 		}
@@ -97,9 +95,9 @@ class Main : MelonMod
 		foreach (Rigidbody r in Object.FindObjectsOfType<Rigidbody>())
 		{
 			if (r.gameObject.CompareTag("Gun"))
-            {
+			{
 				continue;
-            }
+			}
 			allMovables[counter] = r.gameObject;
 			counter++;
 		}
@@ -110,18 +108,18 @@ class Main : MelonMod
 
 	IEnumerator AudioPatch() {
 		foreach (GameObject g in Resources.FindObjectsOfTypeAll(typeof(GameObject)))
-        {
+		{
 			Options o = g.GetComponent<Options>();
 			if (o != null)
-            {
+			{
 				g.SetActive(true);
 				o.enabled = true;
 				yield return null;
 				g.SetActive(false);
 				break;
 			}
-        }
-    }
+		}
+	}
 
 	private static Transform[] temp;
 	public static void Reload() { // weirdass shenanigan that fixes the glitch where keys are not registered in scene transition for savestates
@@ -196,9 +194,9 @@ class Main : MelonMod
 		int gunIndex = -1;
 		DetectWeapons DW = Object.FindObjectOfType<DetectWeapons>();
 		for (int i = 0; i < allGuns.Length; i++)
-        {
+		{
 			if (allGuns[i] == (GameObject)gun.GetValue(DW)) gunIndex = i;
-        }
+		}
 		if (SceneManager.GetActiveScene().name == "10Sky2" || SceneManager.GetActiveScene().name == "8Sky0") gunIndex = -1;
 		ini.SetInt("Player", "WeaponId", gunIndex);
 		for (int i = 0; i < allMovables.Length; i++)
@@ -273,7 +271,7 @@ class Main : MelonMod
 		plr.gameObject.GetComponent<Rigidbody>().velocity = new Vector3(ini.GetFloat(section, "VelocityX"), ini.GetFloat(section, "VelocityY"), ini.GetFloat(section, "VelocityZ"));
 		X = ini.GetInt(section, "WeaponId");
 		if (X >= 0)
-        {
+		{
 			DetectWeapons dw = Object.FindObjectOfType<DetectWeapons>();
 			dw.ForcePickup(allGuns[(int)X]);
 			GameObject gun = allGuns[(int)X];
@@ -322,7 +320,7 @@ class Main : MelonMod
 				ini.GetFloat(section, "Rotation"), 
 				allEnemies[i].transform.eulerAngles.z);
 			if (ini.GetBool(section, "isDead"))
-            {
+			{
 				allEnemies[i].GetComponent<RagdollController>().MakeRagdoll(Vector3.zero);
 				allEnemies[i].DropGun(Vector3.zero);
 			}
@@ -330,5 +328,11 @@ class Main : MelonMod
 		MelonDebug.Msg("State loaded");
 	}
 
+}
+
+public struct KeyBind
+{
+	public char key;
+	public string command;
 }
 
